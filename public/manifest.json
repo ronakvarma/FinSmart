@@ -1,0 +1,28 @@
+{
+  "name": "FinSmart - Real-time Risk Management",
+  "short_name": "FinSmart",
+  "description": "A comprehensive real-time risk management Progressive Web App for financial services",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E3A8A",
+  "theme_color": "#1E3A8A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "lang": "en-US",
+  "scope": "/",
+  "prefer_related_applications": false
+}
