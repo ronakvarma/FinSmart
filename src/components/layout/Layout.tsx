@@ -81,4 +81,5 @@ export function Layout({ children }: LayoutProps) {
         <MobileNavigation />
       </div>
     </ClerkProvider>
-  )
+  );
+}
