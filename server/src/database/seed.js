@@ -313,20 +313,7 @@ async function seedDatabase() {
   logger.info('Starting database seeding...');
 
   try {
-    // Clear existing data (in reverse order due to foreign keys)
-    const tables = ['risk_metrics', 'suspicious_trades', 'alerts', 'holdings', 'portfolios', 'profiles'];
-    
-    for (const table of tables) {
-      logger.info(`Clearing existing data from ${table}...`);
-      const { error } = await supabaseAdmin
-        .from(table)
-        .delete()
-        .neq('id', 'impossible_id'); // Delete all records
-
-      if (error && !error.message.includes('relation') && !error.message.includes('does not exist')) {
-        logger.warn(`Warning clearing ${table}:`, error.message);
-      }
-    }
+    logger.info('Skipping data clearing for demo - inserting sample data...');
 
     // Insert sample data (in correct order due to foreign keys)
     const insertOrder = ['profiles', 'portfolios', 'holdings', 'alerts', 'suspicious_trades', 'risk_metrics'];
@@ -336,16 +323,20 @@ async function seedDatabase() {
       if (data && data.length > 0) {
         logger.info(`Inserting ${data.length} records into ${table}...`);
         
-        const { error } = await supabaseAdmin
-          .from(table)
-          .insert(data);
+        try {
+          const { error } = await supabaseAdmin
+            .from(table)
+            .upsert(data, { onConflict: 'id' });
 
-        if (error) {
-          logger.error(`Error inserting into ${table}:`, error);
-          throw error;
+          if (error) {
+            logger.warn(`Warning inserting into ${table}:`, error.message);
+            // Continue with other tables even if one fails
+          } else {
+            logger.info(`Successfully inserted data into ${table}`);
+          }
+        } catch (insertError) {
+          logger.warn(`Could not insert into ${table}:`, insertError.message);
         }
-
-        logger.info(`Successfully inserted data into ${table}`);
       }
     }
 
@@ -371,16 +362,20 @@ async function verifySeededData() {
 
   try {
     for (const table of Object.keys(sampleData)) {
-      const { count, error } = await supabaseAdmin
-        .from(table)
-        .select('*', { count: 'exact', head: true });
+      try {
+        const { count, error } = await supabaseAdmin
+          .from(table)
+          .select('*', { count: 'exact', head: true });
 
-      if (error) {
-        logger.error(`Error verifying ${table}:`, error);
-        continue;
+        if (error) {
+          logger.warn(`Could not verify ${table}:`, error.message);
+          continue;
+        }
+
+        logger.info(`${table}: ${count || 0} records found`);
+      } catch (verifyError) {
+        logger.warn(`Could not verify ${table}:`, verifyError.message);
       }
-
-      logger.info(`${table}: ${count} records found`);
     }
 
     logger.info('Data verification completed');
