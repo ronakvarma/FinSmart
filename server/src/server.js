@@ -15,7 +15,7 @@ require('dotenv').config();
 // Import middleware and routes
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { requestLogger } = require('./middleware/loggingMiddleware');
-const logger = require('./utils/logger');
+const { initializeDatabase } = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -102,7 +102,7 @@ app.use(compression());
 
 // Logging middleware
 if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+  app.use(morgan('combined'));
 }
 app.use(requestLogger);
 
@@ -150,22 +150,25 @@ app.use(errorHandler);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
+  console.log('SIGTERM received, shutting down gracefully');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
+  console.log('SIGINT received, shutting down gracefully');
   process.exit(0);
 });
 
-// Start server
+// Initialize database and start server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    logger.info(`🚀 FinSmart API Server running on port ${PORT}`);
-    logger.info(`📚 API Documentation available at http://localhost:${PORT}/api-docs`);
-    logger.info(`🏥 Health check available at http://localhost:${PORT}/health`);
-    logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
+  initializeDatabase().then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 FinSmart API Server running on port ${PORT}`);
+      console.log(`📚 API Documentation available at http://localhost:${PORT}/api-docs`);
+      console.log(`🏥 Health check available at http://localhost:${PORT}/health`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+      console.log(`💾 Database: Supabase integration active`);
+    });
   });
 }
 

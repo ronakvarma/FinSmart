@@ -4,7 +4,6 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const logger = require('../utils/logger');
 
 /**
  * Request logging middleware
@@ -20,7 +19,7 @@ const requestLogger = (req, res, next) => {
   // Log request start
   const startTime = Date.now();
   
-  logger.info('Request started', {
+  console.log('Request started', {
     requestId: req.requestId,
     method: req.method,
     url: req.originalUrl,
@@ -34,7 +33,7 @@ const requestLogger = (req, res, next) => {
   res.json = function(data) {
     const duration = Date.now() - startTime;
     
-    logger.info('Request completed', {
+    console.log('Request completed', {
       requestId: req.requestId,
       method: req.method,
       url: req.originalUrl,
@@ -54,7 +53,7 @@ const requestLogger = (req, res, next) => {
  * Logs security-related events
  */
 const securityLogger = (event, details = {}) => {
-  logger.warn('Security Event', {
+  console.warn('Security Event', {
     event,
     timestamp: new Date().toISOString(),
     ...details
@@ -73,7 +72,7 @@ const performanceLogger = (threshold = 1000) => {
       const duration = Date.now() - startTime;
       
       if (duration > threshold) {
-        logger.warn('Slow request detected', {
+        console.warn('Slow request detected', {
           requestId: req.requestId,
           method: req.method,
           url: req.originalUrl,
@@ -92,7 +91,7 @@ const performanceLogger = (threshold = 1000) => {
  * Database operation logger
  */
 const dbLogger = (operation, table, details = {}) => {
-  logger.info('Database operation', {
+  console.log('Database operation', {
     operation,
     table,
     timestamp: new Date().toISOString(),
@@ -104,7 +103,7 @@ const dbLogger = (operation, table, details = {}) => {
  * Authentication event logger
  */
 const authLogger = (event, userId, details = {}) => {
-  logger.info('Authentication event', {
+  console.log('Authentication event', {
     event,
     userId,
     timestamp: new Date().toISOString(),
