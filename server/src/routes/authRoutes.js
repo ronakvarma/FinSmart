@@ -5,10 +5,38 @@
 
 const express = require('express');
 const { requireAuth, withAuth, getUserFromAuth } = require('../config/clerk');
-const { validate, userSchemas } = require('../middleware/validationMiddleware');
+const { validate } = require('../middleware/validationMiddleware');
 const { asyncHandler } = require('../middleware/errorMiddleware');
 const { supabase } = require('../config/database');
-const logger = require('../utils/logger');
+
+// Simple validation schemas
+const userSchemas = {
+  updateProfile: {
+    validate: (data) => {
+      const errors = [];
+      if (data.name && (typeof data.name !== 'string' || data.name.length < 2)) {
+        errors.push({ field: 'name', message: 'Name must be at least 2 characters' });
+      }
+      if (data.role && !['trader', 'risk_manager', 'admin', 'compliance'].includes(data.role)) {
+        errors.push({ field: 'role', message: 'Invalid role' });
+      }
+      return { errors, isValid: errors.length === 0 };
+    }
+  }
+};
+
+// Simple validation middleware
+const validateProfile = (req, res, next) => {
+  const { errors, isValid } = userSchemas.updateProfile.validate(req.body);
+  if (!isValid) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors
+    });
+  }
+  next();
+};
 
 const router = express.Router();
 
@@ -58,7 +86,7 @@ router.get('/profile', requireAuth, asyncHandler(async (req, res) => {
     .single();
 
   if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-    logger.error('Error fetching user profile:', error);
+    console.error('Error fetching user profile:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch user profile'
@@ -81,7 +109,7 @@ router.get('/profile', requireAuth, asyncHandler(async (req, res) => {
       .single();
 
     if (createError) {
-      logger.error('Error creating user profile:', createError);
+      console.error('Error creating user profile:', createError);
       return res.status(500).json({
         success: false,
         message: 'Failed to create user profile'
@@ -150,7 +178,7 @@ router.get('/profile', requireAuth, asyncHandler(async (req, res) => {
  */
 router.put('/profile', 
   requireAuth, 
-  validate(userSchemas.updateProfile), 
+  validateProfile,
   asyncHandler(async (req, res) => {
     const user = getUserFromAuth(req.auth);
     const updates = {
@@ -166,14 +194,14 @@ router.put('/profile',
       .single();
 
     if (error) {
-      logger.error('Error updating user profile:', error);
+      console.error('Error updating user profile:', error);
       return res.status(500).json({
         success: false,
         message: 'Failed to update profile'
       });
     }
 
-    logger.info('User profile updated', { userId: user.id, updates });
+    console.log('User profile updated', { userId: user.id, updates });
 
     res.json({
       success: true,
@@ -249,14 +277,14 @@ router.post('/register', asyncHandler(async (req, res) => {
     .single();
 
   if (error) {
-    logger.error('Error creating user profile during registration:', error);
+    console.error('Error creating user profile during registration:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to create user profile'
     });
   }
 
-  logger.info('New user registered', { userId: data.id, email });
+  console.log('New user registered', { userId: data.id, email });
 
   res.json({
     success: true,

@@ -5,10 +5,31 @@
 
 const express = require('express');
 const { requireAuth, getUserFromAuth, requireRiskManager } = require('../config/clerk');
-const { validate, validateId, portfolioSchemas, querySchemas } = require('../middleware/validationMiddleware');
+const { validateId } = require('../middleware/validationMiddleware');
 const { asyncHandler } = require('../middleware/errorMiddleware');
 const { supabase } = require('../config/database');
-const logger = require('../utils/logger');
+
+// Simple validation middleware
+const validatePagination = (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+  const sort = req.query.sort || 'created_at';
+  const order = req.query.order === 'asc' ? 'asc' : 'desc';
+  
+  req.query = { ...req.query, page, limit, sort, order };
+  next();
+};
+
+// Simple ID validation
+const validateId = () => (req, res, next) => {
+  if (!req.params.id) {
+    return res.status(400).json({
+      success: false,
+      message: 'ID parameter is required'
+    });
+  }
+  next();
+};
 
 const router = express.Router();
 
@@ -76,8 +97,7 @@ const router = express.Router();
  */
 router.get('/', 
   requireAuth,
-  validate(querySchemas.pagination, 'query'),
-  validate(querySchemas.portfolioFilters, 'query'),
+  validatePagination,
   asyncHandler(async (req, res) => {
     const user = getUserFromAuth(req.auth);
     const { page, limit, sort, order } = req.query;
@@ -113,7 +133,7 @@ router.get('/',
     const { data: portfolios, error, count } = await query;
 
     if (error) {
-      logger.error('Error fetching portfolios:', error);
+      console.error('Error fetching portfolios:', error);
       return res.status(500).json({
         success: false,
         message: 'Failed to fetch portfolios'
