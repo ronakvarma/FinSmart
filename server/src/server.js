@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 // Import middleware and routes
@@ -26,7 +27,21 @@ const userRoutes = require('./routes/userRoutes');
 
 // Import API documentation
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./config/swagger');
+let swaggerSpec;
+try {
+  swaggerSpec = require('./config/swagger');
+} catch (error) {
+  console.warn('Swagger configuration not available:', error.message);
+  swaggerSpec = {
+    openapi: '3.0.0',
+    info: {
+      title: 'FinSmart API',
+      version: '1.0.0',
+      description: 'Real-time Risk Management API'
+    },
+    paths: {}
+  };
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;

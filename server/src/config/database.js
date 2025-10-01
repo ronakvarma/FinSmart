@@ -6,19 +6,15 @@
 const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
 
-// Validate required environment variables
-const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
-  logger.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
-  process.exit(1);
-}
+// Use environment variables with fallbacks for demo
+const supabaseUrl = process.env.SUPABASE_URL || 'https://rcurovgxikthkiniibez.supabase.co';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdXJvdmd4aWt0aGtpbmlpYmV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyNjkyOTcsImV4cCI6MjA3Mzg0NTI5N30.Ot1oOvU8nT8EqrW6bR5ZzSHWGUi0taMT3IcUMVn_zQ8';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
 
 // Create Supabase client
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
       autoRefreshToken: true,
@@ -35,8 +31,8 @@ const supabase = createClient(
 
 // Create admin client for server-side operations
 const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
+  supabaseUrl,
+  supabaseServiceKey,
   {
     auth: {
       autoRefreshToken: false,

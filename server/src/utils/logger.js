@@ -5,9 +5,9 @@
 
 const winston = require('winston');
 const path = require('path');
+const fs = require('fs');
 
 // Create logs directory if it doesn't exist
-const fs = require('fs');
 const logDir = path.join(__dirname, '../../logs');
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
@@ -47,7 +47,7 @@ const logger = winston.createLogger({
   format: logFormat,
   defaultMeta: {
     service: 'finsmart-api',
-    version: process.env.npm_package_version || '1.0.0'
+    version: '1.0.0'
   },
   transports: [
     // Error log file

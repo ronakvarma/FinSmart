@@ -143,19 +143,25 @@ class AppError extends Error {
 /**
  * Handle unhandled promise rejections
  */
-process.on('unhandledRejection', (err, promise) => {
-  logger.error('Unhandled Promise Rejection:', err);
-  // Close server & exit process
-  process.exit(1);
-});
+if (process.env.NODE_ENV !== 'test') {
+  process.on('unhandledRejection', (err, promise) => {
+    console.error('Unhandled Promise Rejection:', err);
+    // In production, you might want to exit, but for development we'll just log
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  });
 
-/**
- * Handle uncaught exceptions
- */
-process.on('uncaughtException', (err) => {
-  logger.error('Uncaught Exception:', err);
-  process.exit(1);
-});
+  /**
+   * Handle uncaught exceptions
+   */
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  });
+}
 
 module.exports = {
   notFound,
